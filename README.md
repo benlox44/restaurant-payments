@@ -59,7 +59,6 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 **¡Listo!** El servidor estará en `http://localhost:8000`
 
-**Ver guía completa de testing**: [`TESTING_LOCAL.md`](TESTING_LOCAL.md)
 
 **Credenciales de integración (ya incluidas):**
 - Código de comercio: `597055555532`
@@ -68,7 +67,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 **Tarjeta de prueba:**
 - Número: `4051 8856 0044 6623`
 - CVV: `123`
-- Fecha: 10/26
+- Fecha: `10/26`
 - RUT: `11.111.111-1`
 - Clave: `123`
 
@@ -78,17 +77,6 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 
 ```bash
 docker-compose up --build
-```
-
-### Producción
-
-```bash
-docker build -t restaurant-payments .
-docker run -p 8000:8000 \
-  -e WEBPAY_COMMERCE_CODE=tu_codigo \
-  -e WEBPAY_API_KEY=tu_api_key \
-  -e WEBPAY_ENV=production \
-  restaurant-payments
 ```
 
 ## 🔐 Endpoints de la API
@@ -239,78 +227,19 @@ API Key: 579B532A7440BB0C9079DED94D31EA161EBE3BBA
 Ambiente: Integración
 ```
 
-### Tarjetas de Prueba
-
-**Para transacciones exitosas:**
-- Número: `4051 8856 0044 6623`
-- CVV: `123`
-- Fecha: Cualquier fecha futura (ej: `10/26`)
-
-**Autenticación:**
-- RUT: `11.111.111-1`
-- Clave: `123`
-
-### ⚠️ Importante
-
-- ✅ **HTTP funciona para testing local** (no necesitas HTTPS)
-- ✅ Puedes usar `http://localhost` en las URLs de retorno
-- ✅ Las credenciales ya están en el código, no necesitas archivo .env
-- ✅ Cada transacción debe tener `buy_order` y `session_id` únicos
-
-## 🚀 Deployment en Render
-
-### Opción 1: Con Docker (Recomendado)
-
-1. Conecta tu repositorio de GitHub a Render
-2. Crea un nuevo **Web Service**
-3. Configura:
-   - **Environment**: `Docker`
-   - **Health Check Path**: `/health`
-4. Agrega las variables de entorno:
-   ```
-   WEBPAY_COMMERCE_CODE=tu_codigo_comercio
-   WEBPAY_API_KEY=tu_api_key
-   WEBPAY_ENV=production
-   ```
-
-### Opción 2: Sin Docker
-
-1. Conecta tu repositorio de GitHub a Render
-2. Crea un nuevo **Web Service**
-3. Configura:
-   - **Environment**: `Python 3`
-   - **Build Command**: `./build.sh`
-   - **Start Command**: `./start.sh`
-   - **Health Check Path**: `/health`
-4. Agrega las variables de entorno (igual que arriba)
-
 ## 📚 Documentación Interactiva
 
 Una vez desplegado, visita:
 - **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-- **Health Check**: `http://localhost:8000/health`
-
-## 🏗️ Arquitectura
-
-```
-restaurant-payments/
-├── main.py                  # Aplicación FastAPI principal
-├── Payment/
-│   ├── webpay_service.py   # Lógica de Webpay Plus
-│   └── __pycache__/
-├── requirements.txt         # Dependencias Python
-├── Dockerfile              # Configuración Docker
-├── docker-compose.yml      # Orquestación local
-├── .env.example           # Template de variables de entorno
-└── README.md              # Este archivo
-```
 
 ## � Flujo de Pago
 
 1. **Frontend** llama a `/payments/create` con datos de la orden
 2. **Backend** crea transacción en Webpay y retorna `url` y `token`
 3. **Frontend** redirige al usuario a la `url` de Webpay
+    <form id="webpayForm" method="POST" action="https://webpay3gint.transbank.cl/webpayserver/initTransaction" style="display: none;">
+        <input type="hidden" name="token_ws" id="token_ws">
+    </form>
 4. **Usuario** completa el pago en Webpay
 5. **Webpay** redirige de vuelta a `return_url` con el `token`
 6. **Frontend** llama a `/payments/confirm` con el `token`
@@ -326,26 +255,5 @@ restaurant-payments/
 
 ## 📝 Notas Importantes
 
-1. **Seguridad**: Nunca expongas tu API Key en el código. Usa variables de entorno.
-2. **Testing**: Siempre prueba en ambiente de integración antes de producción.
-3. **Logs**: Monitorea los logs para detectar errores en transacciones.
-4. **HTTPS**: En producción, usa siempre HTTPS para las URLs de retorno.
-5. **Timeout**: Las transacciones en Webpay tienen un timeout de 10 minutos.
-
-## 🐛 Troubleshooting
-
-### Error: "Invalid commerce code"
-- Verifica que `WEBPAY_COMMERCE_CODE` sea correcto
-- Asegúrate de usar las credenciales correctas según el ambiente
-
-### Error: "Invalid token"
-- El token puede haber expirado (10 minutos)
-- Verifica que estés usando el token correcto
-
-### Error: "Transaction already committed"
-- No puedes confirmar una transacción más de una vez
-- Usa `/payments/status/{token}` para consultar el estado
-
-## 📄 Licencia
-
-Este proyecto está bajo la licencia MIT.
+1. **Timeout**: Las transacciones en Webpay tienen un timeout de 10 minutos.
+2. **Pruebas de pago**: se creo un html redirect_to_webpay.html para probar el acceso a la pasarela de pago
