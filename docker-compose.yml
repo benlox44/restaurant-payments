@@ -7,7 +7,11 @@ services:
       dockerfile: DockerFile
     container_name: restaurant-payments
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     environment:
+      - PORT=8000
+      - TRANSBANK_COMMERCE_CODE=${TRANSBANK_COMMERCE_CODE:-597055555532}
+      - TRANSBANK_API_KEY=${TRANSBANK_API_KEY:-579B532A7440BB0C9079DED94D31EA161EBE3BBA}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - PYTHONUNBUFFERED=1
     restart: unless-stopped

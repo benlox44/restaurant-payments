@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: restaurant-payments
+    env: docker
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: TRANSBANK_COMMERCE_CODE
+        value: 597055555532
+      - key: TRANSBANK_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+    autoDeploy: true
