@@ -231,6 +231,7 @@ Ambiente: Integración
 
 Una vez desplegado, visita:
 - **Swagger UI**: `http://localhost:8000/docs`
+- **Endpoints UI**: `http://localhost:8000/redoc`
 
 ## � Flujo de Pago
 

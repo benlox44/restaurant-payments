@@ -1,17 +1,22 @@
-version: "3.8"
-
 services:
   payments:
     build:
       context: .
-      dockerfile: DockerFile
+      dockerfile: Dockerfile
     container_name: restaurant-payments
     ports:
-      - "${PORT:-8000}:8000"
+      - "8000:8000"
     environment:
-      - PORT=8000
-      - TRANSBANK_COMMERCE_CODE=${TRANSBANK_COMMERCE_CODE:-597055555532}
-      - TRANSBANK_API_KEY=${TRANSBANK_API_KEY:-579B532A7440BB0C9079DED94D31EA161EBE3BBA}
-      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - TRANSBANK_COMMERCE_CODE=597055555532
+      - TRANSBANK_API_KEY=579B532A7440BB0C9079DED94D31EA161EBE3BBA
+      - ENVIRONMENT=development
       - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
     restart: unless-stopped
+    networks:
+      - restaurant-network
+
+networks:
+  restaurant-network:
+    driver: bridge
