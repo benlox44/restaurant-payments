@@ -1,4 +1,7 @@
-# Payment package
-from .webpay_service import webpay_service, WebpayService
+"""
+Payment module for Webpay Plus integration
+"""
 
-__all__ = ['webpay_service', 'WebpayService']
+from .webpay_service import webpay_service
+
+__all__ = ['webpay_service']

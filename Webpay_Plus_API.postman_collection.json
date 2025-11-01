@@ -1,0 +1,171 @@
+{
+	"info": {
+		"name": "Restaurant Payments - Webpay Plus",
+		"description": "API de pagos con Webpay Plus para restaurante",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": ["{{base_url}}"],
+					"path": ["health"]
+				},
+				"description": "Verifica que la API esté funcionando"
+			}
+		},
+		{
+			"name": "Index",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/",
+					"host": ["{{base_url}}"],
+					"path": [""]
+				},
+				"description": "Información general de la API"
+			}
+		},
+		{
+			"name": "Crear Transacción",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.success) {",
+							"        pm.environment.set('token', jsonData.token);",
+							"        pm.environment.set('webpay_url', jsonData.url);",
+							"        console.log('Token guardado:', jsonData.token);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"buy_order\": \"orden-{{$randomInt}}\",\n    \"session_id\": \"session-{{$randomInt}}\",\n    \"amount\": 15000,\n    \"return_url\": \"http://localhost:3000/payment/return\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/payments/create",
+					"host": ["{{base_url}}"],
+					"path": ["payments", "create"]
+				},
+				"description": "Crea una nueva transacción de pago. El token se guarda automáticamente para las siguientes peticiones."
+			}
+		},
+		{
+			"name": "Confirmar Transacción",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"token\": \"{{token}}\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/payments/confirm",
+					"host": ["{{base_url}}"],
+					"path": ["payments", "confirm"]
+				},
+				"description": "Confirma una transacción después del pago. Usa el token de la transacción creada."
+			}
+		},
+		{
+			"name": "Consultar Estado",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/payments/status/{{token}}",
+					"host": ["{{base_url}}"],
+					"path": ["payments", "status", "{{token}}"]
+				},
+				"description": "Consulta el estado actual de una transacción usando el token."
+			}
+		},
+		{
+			"name": "Reembolsar",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"token\": \"{{token}}\",\n    \"amount\": 15000\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/payments/refund",
+					"host": ["{{base_url}}"],
+					"path": ["payments", "refund"]
+				},
+				"description": "Realiza un reembolso de una transacción. Puede ser reembolso parcial o total."
+			}
+		},
+		{
+			"name": "Enviar Notificación",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"categoria\": true,\n    \"mensaje\": \"Pago procesado correctamente\",\n    \"adicional\": \"Información adicional de la transacción\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/notifications",
+					"host": ["{{base_url}}"],
+					"path": ["notifications"]
+				},
+				"description": "Envía una notificación (endpoint legacy/adicional)"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "webpay_url",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

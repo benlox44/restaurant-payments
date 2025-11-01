@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirigiendo a Webpay...</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+        }
+        h1 { margin-top: 0; color: #667eea; }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Ir a Webpay</h1>
+        
+        <div class="info">
+            <strong>📋 Instrucciones:</strong><br>
+            1. Pega el TOKEN que recibiste de la API<br>
+            2. Haz clic en "Ir a Webpay"<br>
+            3. Completa el pago con los datos de prueba
+        </div>
+
+        <label for="token" style="display: block; text-align: left; font-weight: bold; margin-bottom: 5px;">
+            Token de la transacción:
+        </label>
+        <input 
+            type="text" 
+            id="token" 
+            placeholder="Pega aquí el token (ej: 01ab450ea0bd...)"
+            style="font-family: monospace; font-size: 12px;">
+        
+        <button onclick="goToWebpay()">🚀 Ir a Webpay</button>
+
+        <div id="autoRedirect" style="display: none;">
+            <div class="spinner"></div>
+            <p>Redirigiendo a Webpay en <span id="countdown">3</span> segundos...</p>
+        </div>
+
+        <div class="info" style="margin-top: 20px; background: #fff3cd; border-left: 4px solid #ffc107;">
+            <strong>🎴 Datos de prueba para Webpay:</strong><br>
+            <strong>Tarjeta:</strong> 4051 8856 0044 6623<br>
+            <strong>CVV:</strong> 123<br>
+            <strong>Fecha:</strong> 10/26<br>
+            <strong>RUT:</strong> 11.111.111-1<br>
+            <strong>Clave:</strong> 123
+        </div>
+    </div>
+
+    <form id="webpayForm" method="POST" action="https://webpay3gint.transbank.cl/webpayserver/initTransaction" style="display: none;">
+        <input type="hidden" name="token_ws" id="token_ws">
+    </form>
+
+    <script>
+        // Autocompletar si hay token en la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            document.getElementById('token').value = tokenFromUrl;
+            // Auto-redirigir en 3 segundos
+            document.getElementById('autoRedirect').style.display = 'block';
+            let countdown = 3;
+            const countdownEl = document.getElementById('countdown');
+            const interval = setInterval(() => {
+                countdown--;
+                countdownEl.textContent = countdown;
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    goToWebpay();
+                }
+            }, 1000);
+        }
+
+        function goToWebpay() {
+            const token = document.getElementById('token').value.trim();
+            
+            if (!token) {
+                alert('Por favor ingresa el token de la transacción');
+                return;
+            }
+
+            // Establecer el token en el formulario oculto
+            document.getElementById('token_ws').value = token;
+            
+            // Enviar el formulario
+            document.getElementById('webpayForm').submit();
+        }
+
+        // Permitir enviar con Enter
+        document.getElementById('token').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                goToWebpay();
+            }
+        });
+    </script>
+</body>
+</html>

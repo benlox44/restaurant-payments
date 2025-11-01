@@ -133,6 +133,205 @@ def notification(notificacion: Notificacion):
         "adicional": notificacion.adicional
     }
 
+# Endpoint de retorno desde Webpay (ejemplo)
+@app.get("/payment/callback")
+def payment_callback(token_ws: str = None):
+    """
+    Endpoint de ejemplo para recibir el retorno de Webpay
+    
+    Webpay redirigirá aquí después del pago con el parámetro token_ws
+    URL de retorno ejemplo: http://localhost:8000/payment/callback
+    
+    Este endpoint:
+    1. Recibe el token_ws de Webpay
+    2. Confirma automáticamente la transacción
+    3. Muestra el resultado en HTML
+    """
+    from fastapi.responses import HTMLResponse
+    
+    if not token_ws:
+        return HTMLResponse("""
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1 style="color: red;">❌ Error</h1>
+                    <p>No se recibió el token de Webpay</p>
+                    <a href="/">Volver al inicio</a>
+                </body>
+            </html>
+        """)
+    
+    try:
+        # Confirmar la transacción automáticamente
+        resultado = webpay_service.commit_transaction(token=token_ws)
+        
+        if not resultado.get("success"):
+            return HTMLResponse(f"""
+                <html>
+                    <body style="font-family: Arial; text-align: center; padding: 50px;">
+                        <h1 style="color: red;">❌ Error al confirmar</h1>
+                        <p>{resultado.get('error')}</p>
+                        <a href="/">Volver al inicio</a>
+                    </body>
+                </html>
+            """)
+        
+        status = resultado.get("status")
+        amount = resultado.get("amount")
+        auth_code = resultado.get("authorization_code")
+        buy_order = resultado.get("buy_order")
+        response_code = resultado.get("response_code")
+        
+        if status == "AUTHORIZED" and response_code == 0:
+            # Pago exitoso
+            return HTMLResponse(f"""
+                <html>
+                    <head>
+                        <title>Pago Exitoso</title>
+                        <style>
+                            body {{
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                padding: 50px;
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                            }}
+                            .card {{
+                                background: white;
+                                color: #333;
+                                padding: 40px;
+                                border-radius: 15px;
+                                max-width: 500px;
+                                margin: 0 auto;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                            }}
+                            .success {{
+                                color: #28a745;
+                                font-size: 60px;
+                                margin: 0;
+                            }}
+                            .info {{
+                                margin: 20px 0;
+                                padding: 15px;
+                                background: #f8f9fa;
+                                border-radius: 8px;
+                            }}
+                            .label {{
+                                font-weight: bold;
+                                color: #666;
+                            }}
+                            .value {{
+                                color: #333;
+                                font-size: 18px;
+                            }}
+                            a {{
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 12px 30px;
+                                background: #667eea;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 5px;
+                                transition: background 0.3s;
+                            }}
+                            a:hover {{
+                                background: #764ba2;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="card">
+                            <div class="success">✅</div>
+                            <h1>¡Pago Exitoso!</h1>
+                            <p>Tu transacción ha sido procesada correctamente</p>
+                            
+                            <div class="info">
+                                <div class="label">Monto</div>
+                                <div class="value">${amount:,} CLP</div>
+                            </div>
+                            
+                            <div class="info">
+                                <div class="label">Orden de Compra</div>
+                                <div class="value">{buy_order}</div>
+                            </div>
+                            
+                            <div class="info">
+                                <div class="label">Código de Autorización</div>
+                                <div class="value">{auth_code}</div>
+                            </div>
+                            
+                            <div class="info">
+                                <div class="label">Token</div>
+                                <div class="value" style="font-size: 12px; word-break: break-all;">{token_ws[:20]}...</div>
+                            </div>
+                            
+                            <a href="/">Volver al inicio</a>
+                        </div>
+                    </body>
+                </html>
+            """)
+        else:
+            # Pago rechazado
+            return HTMLResponse(f"""
+                <html>
+                    <head>
+                        <title>Pago Rechazado</title>
+                        <style>
+                            body {{
+                                font-family: Arial, sans-serif;
+                                text-align: center;
+                                padding: 50px;
+                                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                                color: white;
+                            }}
+                            .card {{
+                                background: white;
+                                color: #333;
+                                padding: 40px;
+                                border-radius: 15px;
+                                max-width: 500px;
+                                margin: 0 auto;
+                                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                            }}
+                            .error {{
+                                color: #dc3545;
+                                font-size: 60px;
+                                margin: 0;
+                            }}
+                            a {{
+                                display: inline-block;
+                                margin-top: 20px;
+                                padding: 12px 30px;
+                                background: #dc3545;
+                                color: white;
+                                text-decoration: none;
+                                border-radius: 5px;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="card">
+                            <div class="error">❌</div>
+                            <h1>Pago Rechazado</h1>
+                            <p>La transacción no pudo ser procesada</p>
+                            <p><strong>Estado:</strong> {status}</p>
+                            <p><strong>Código de respuesta:</strong> {response_code}</p>
+                            <a href="/">Intentar nuevamente</a>
+                        </div>
+                    </body>
+                </html>
+            """)
+            
+    except Exception as e:
+        return HTMLResponse(f"""
+            <html>
+                <body style="font-family: Arial; text-align: center; padding: 50px;">
+                    <h1 style="color: red;">❌ Error</h1>
+                    <p>Error al procesar el pago: {str(e)}</p>
+                    <a href="/">Volver al inicio</a>
+                </body>
+            </html>
+        """)
+
 # Punto de entrada para ejecución directa
 if __name__ == "__main__":
     import uvicorn
